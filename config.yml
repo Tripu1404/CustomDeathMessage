@@ -1,0 +1,54 @@
+# CustomDeathMessage Configuration
+
+# Placeholders:
+# <Player> : Name of the victim (player or mob)
+# <Attacker> : Name of the attacker (player or mob)
+# <WeaponName> : Weapon name if a player killed another player
+
+# === FALL ===
+FALL: <Player> jumped off the roof
+FALL_BY_PLAYER: <Player> was pushed off the roof by <Attacker>
+
+# === FIRE_TICK ===
+FIRE_TICK: <Player> burned
+FIRE_TICK_BY_PLAYER: <Player> burned while fighting <Attacker>
+
+# === FIRE ===
+FIRE: <Player> burned
+
+# === LAVA ===
+LAVA: <Player> swam in lava
+
+# === DROWNING ===
+DROWNING: <Player> drowned
+
+# === SUFFOCATION ===
+SUFFOCATION: <Player> suffocated in wall
+
+# === VOID ===
+VOID: <Player> went over the edge
+
+# === SUICIDE ===
+SUICIDE: <Player> suicided
+
+# === BLOCK EXPLOSION ===
+BLOCK_EXPLOSION: <Player> blew up
+BLOCK_EXPLOSION_BY_PLAYER: <Player> blew up by <Attacker>
+
+# === ENTITY EXPLOSION ===
+ENTITY_EXPLOSION: <Player> was blown up by <Attacker>
+ENTITY_EXPLOSION_ENDER_CRYSTAL: <Player> was blown up by <Attacker>'s Ender Crystal
+
+# === ENTITY ATTACK ===
+KILL_BY_WEAPON: <Player> got killed by <Attacker> using <WeaponName>
+MOB_ATTACK: <Player> got killed by <Attacker>
+
+# === PROJECTILE ===
+PROJECTILE: <Player> got shot by <Attacker>
+
+# === MAGIC ===
+MAGIC: <Player> died from magic
+MAGIC_BY_ENTITY: <Player> was cursed by <Attacker>
+
+# === DEFAULT ===
+CUSTOM: <Player> died without reason
