@@ -28,7 +28,7 @@ jobs:
         run: |
           mkdir -p bin
           javac -cp "libs/nukkit.jar" -d bin src/org/_2b2tmcpe/CustomDeathMessage/*.java src/org/_2b2tmcpe/CustomDeathMessage/Listener/*.java
-          cp config.yml bin/  # Copiar config al bin
+          cp config.yml bin/
           jar cf CustomDeathMessage.jar -C bin .
 
       - name: Upload compiled JAR
