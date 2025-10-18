@@ -1,31 +1,9 @@
-/**
- * MIT License
- *
- * Copyright (c) 2019 2B2TMCBE
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
 package org._2b2tmcpe.CustomDeathMessage.Listener;
 
 import org._2b2tmcpe.CustomDeathMessage.Main;
 import cn.nukkit.Player;
 import cn.nukkit.entity.Entity;
+import cn.nukkit.entity.projectile.Projectile;
 import cn.nukkit.event.EventHandler;
 import cn.nukkit.event.Listener;
 import cn.nukkit.event.entity.EntityDamageByEntityEvent;
@@ -35,151 +13,128 @@ import cn.nukkit.event.player.PlayerDeathEvent;
 import cn.nukkit.utils.Config;
 import cn.nukkit.utils.TextFormat;
 
-/*
- * TODO Fix unable to convert config tags in: (Player)
- * KILL_BY_WEAPON: <Player> got killed by <Attacker> using <WeaponName> #DONE
- * MOB_ATTACK: <Player> got killed by <Attacker> #DONE
- * PROJECTILE: <Player> got shot by <Attacker> #DONE
- * ENTITY_EXPLOSION: <Player> Blew to pieces by <Attacker> #DONE
- * 
- * TODO Fix unrecognized death cause in LIGHTNING #DONE
- */
-
-
 public class PlayerDeathListener implements Listener {
 
-  private Main plugin;
-  private Config conf;
+    private Main plugin;
+    private Config conf;
 
-  /**
-   * Constructor
-   */
-  public PlayerDeathListener(Main plugin) {
-    this.plugin = plugin;
-    this.conf = plugin.getConfig();
-  }
-
-  /**
-   * This function Listen to PlayerDeathEvent
-   *
-   * @param event
-   */
-  @EventHandler
-  public void onDeath(PlayerDeathEvent event) {
-    String deathMessage = "";
-    String playerName = event.getEntity().getName();
-    // Get the default death message
-    String message = this.convertConfigTags(String.valueOf(this.conf.get("CUSTOM")), playerName);
-    // Get a list of damage cause
-    EntityDamageEvent ev = event.getEntity().getLastDamageCause();
-    DamageCause cause = event.getEntity().getPlayer().getLastDamageCause().getCause();
-    // This code is used for debug
-    this.plugin.getLogger().debug("debug: cause=" + cause.name());
-
-    // This part is for entity attack entity
-    if (ev instanceof EntityDamageByEntityEvent) {
-      Entity damager = ((EntityDamageByEntityEvent) ev).getDamager();
-
-      // This condition check is to prevent class cast exception caused by mob attack
-      if ((damager instanceof Player) && !(cause == DamageCause.PROJECTILE)) {
-        String itemName = ((Player) damager).getInventory().getItemInHand().getName();
-        message = this.convertConfigTags(this.conf.getString("KILL_BY_WEAPON"), playerName,
-            damager.getName(), itemName);
-      } else if (cause == DamageCause.ENTITY_EXPLOSION) {
-        deathMessage = this.conf.getString("ENTITY_EXPLOSION");
-        message = this.convertConfigTags(deathMessage, playerName, damager.getName());
-      } else if (cause == DamageCause.PROJECTILE) {
-        deathMessage = this.conf.getString("PROJECTILE");
-        message = this.convertConfigTags(deathMessage, playerName, damager.getName());
-        // Mob attack
-      } else if (cause == DamageCause.LIGHTNING) {
-        deathMessage = this.conf.getString("LIGHTNING");
-        message = this.convertConfigTags(deathMessage, playerName, damager.getName());
-      } else if (cause == DamageCause.ENTITY_ATTACK && !(damager instanceof Player)) {
-        deathMessage = this.conf.getString("MOB_ATTACK");
-        message = this.convertConfigTags(deathMessage, playerName, damager.getName());
-      }
-    } else {
-      message = this.getDeathMessage(cause, playerName);
+    public PlayerDeathListener(Main plugin) {
+        this.plugin = plugin;
+        this.conf = plugin.getConfig();
     }
-    String finalMsg = message;
-    event.setDeathMessage(TextFormat.RED + finalMsg);
-  }
 
-  /**
-   * This method determine the death message of each death case, including the name of the victim.
-   * @param cause
-   * @return the death message for different cases except ENTITY_EXPLOSION, ENTITY_ATTACK, and PROJECTILE
-   */
-  public String getDeathMessage(DamageCause cause, String playerName) {
-    String deathMessage;
-    switch (cause) {
-      case SUFFOCATION:
-        deathMessage = this.conf.getString("SUFFOCATION");
-        break;
-      case FALL:
-        deathMessage = this.conf.getString("FALL");
-        break;
-      case FIRE:
-        deathMessage = this.conf.getString("FIRE");
-        break;
-      case FIRE_TICK:
-        deathMessage = this.conf.getString("FIRE_TICK");
-        break;
-      case LAVA:
-        deathMessage = this.conf.getString("LAVA");
-        break;
-      case DROWNING:
-        deathMessage = this.conf.getString("DROWNING");
-        break;
-      case BLOCK_EXPLOSION:
-        deathMessage = this.conf.getString("BLOCK_EXPLOSION");
-        break;
-      case VOID:
-        deathMessage = this.conf.getString("VOID");
-        break;
-      case SUICIDE:
-        deathMessage = this.conf.getString("SUICIDE");
-        break;
-      case MAGIC:
-        deathMessage = this.conf.getString("MAGIC");
-        break;
-      default:
-        deathMessage = this.conf.getString("CUSTOM");
+    @EventHandler
+    public void onDeath(PlayerDeathEvent event) {
+        String playerName = event.getEntity().getName();
+        EntityDamageEvent ev = event.getEntity().getLastDamageCause();
+        DamageCause cause = ev != null ? ev.getCause() : null;
+
+        String message = "";
+        Entity damager = null;
+        boolean hasAttacker = false;
+
+        // Detectar si hubo entidad atacante
+        if (ev instanceof EntityDamageByEntityEvent) {
+            damager = ((EntityDamageByEntityEvent) ev).getDamager();
+            hasAttacker = damager != null && !(damager.equals(event.getEntity()));
+        }
+
+        switch (cause) {
+            case FALL:
+                if (hasAttacker && damager instanceof Player) {
+                    message = convertConfigTags(conf.getString("FALL_BY_PLAYER"), playerName, damager.getName());
+                } else {
+                    message = convertConfigTags(conf.getString("FALL"), playerName);
+                }
+                break;
+            case FIRE_TICK:
+                if (hasAttacker && damager instanceof Player) {
+                    message = convertConfigTags(conf.getString("FIRE_TICK_BY_PLAYER"), playerName, damager.getName());
+                } else {
+                    message = convertConfigTags(conf.getString("FIRE_TICK"), playerName);
+                }
+                break;
+            case FIRE:
+                message = convertConfigTags(conf.getString("FIRE"), playerName);
+                break;
+            case LAVA:
+                message = convertConfigTags(conf.getString("LAVA"), playerName);
+                break;
+            case DROWNING:
+                message = convertConfigTags(conf.getString("DROWNING"), playerName);
+                break;
+            case SUFFOCATION:
+                message = convertConfigTags(conf.getString("SUFFOCATION"), playerName);
+                break;
+            case VOID:
+                message = convertConfigTags(conf.getString("VOID"), playerName);
+                break;
+            case SUICIDE:
+                message = convertConfigTags(conf.getString("SUICIDE"), playerName);
+                break;
+            case BLOCK_EXPLOSION:
+                if (hasAttacker && damager instanceof Player) {
+                    message = convertConfigTags(conf.getString("BLOCK_EXPLOSION_BY_PLAYER"), playerName, damager.getName());
+                } else {
+                    message = convertConfigTags(conf.getString("BLOCK_EXPLOSION"), playerName);
+                }
+                break;
+            case ENTITY_EXPLOSION:
+                if (hasAttacker) {
+                    if (damager.getName().contains("EnderCrystal")) {
+                        message = convertConfigTags(conf.getString("ENTITY_EXPLOSION_ENDER_CRYSTAL"), playerName, damager.getName());
+                    } else {
+                        message = convertConfigTags(conf.getString("ENTITY_EXPLOSION"), playerName, damager.getName());
+                    }
+                } else {
+                    message = convertConfigTags(conf.getString("ENTITY_EXPLOSION"), playerName);
+                }
+                break;
+            case ENTITY_ATTACK:
+                if (damager instanceof Player) {
+                    String itemName = ((Player) damager).getInventory().getItemInHand().getName();
+                    message = convertConfigTags(conf.getString("KILL_BY_WEAPON"), playerName, damager.getName(), itemName);
+                } else if (hasAttacker) {
+                    message = convertConfigTags(conf.getString("MOB_ATTACK"), playerName, damager.getName());
+                } else {
+                    message = convertConfigTags(conf.getString("MOB_ATTACK"), playerName);
+                }
+                break;
+            case PROJECTILE:
+                if (hasAttacker) {
+                    message = convertConfigTags(conf.getString("PROJECTILE"), playerName, damager.getName());
+                } else {
+                    message = convertConfigTags(conf.getString("PROJECTILE"), playerName);
+                }
+                break;
+            case MAGIC:
+                if (hasAttacker) {
+                    message = convertConfigTags(conf.getString("MAGIC_BY_ENTITY"), playerName, damager.getName());
+                } else {
+                    message = convertConfigTags(conf.getString("MAGIC"), playerName);
+                }
+                break;
+            default:
+                message = convertConfigTags(conf.getString("CUSTOM"), playerName);
+                break;
+        }
+
+        event.setDeathMessage(TextFormat.RED + message);
     }
-    String result = this.convertConfigTags(deathMessage, playerName);
-    return result;
-  }
 
-  /**
-   * This method will convert configuration tags to variables in a provided String
-   * 
-   * @param String deathMessage
-   * @param String playerName
-   * @param String Attacker
-   * @param String weaponName
-   */
-  public String convertConfigTags(String deathMessage, String playerName, String Attacker,
-      String weaponName) {
-    String newDeathMessage = "";
-    newDeathMessage = deathMessage.replace("<Player>", playerName);
-    newDeathMessage = newDeathMessage.replace("<Attacker>", Attacker);
-    newDeathMessage = newDeathMessage.replace("<WeaponName>", weaponName);
-    return newDeathMessage;
-  }
+    // Sobrecargas de convertConfigTags
+    public String convertConfigTags(String deathMessage, String playerName, String attacker, String weaponName) {
+        return deathMessage.replace("<Player>", playerName)
+                           .replace("<Attacker>", attacker)
+                           .replace("<WeaponName>", weaponName);
+    }
 
-  public String convertConfigTags(String deathMessage, String playerName, String Attacker) {
-    String newDeathMessage = "";
-    newDeathMessage = deathMessage.replace("<Player>", playerName);
-    newDeathMessage = newDeathMessage.replace("<Attacker>", Attacker);
-    return newDeathMessage;
-  }
+    public String convertConfigTags(String deathMessage, String playerName, String attacker) {
+        return deathMessage.replace("<Player>", playerName)
+                           .replace("<Attacker>", attacker);
+    }
 
-  public String convertConfigTags(String deathMessage, String playerName) {
-    String newDeathMessage = "";
-    newDeathMessage = deathMessage.replace("<Player>", playerName);
-    return newDeathMessage;
-  }
-
+    public String convertConfigTags(String deathMessage, String playerName) {
+        return deathMessage.replace("<Player>", playerName);
+    }
 }
-
