@@ -20,14 +20,13 @@ jobs:
       - name: Download Nukkit
         run: |
           mkdir -p libs
-          wget -O libs/nukkit.jar https://repo.opencollab.dev/maven-snapshots/cn/nukkit/nukkit/1.0-SNAPSHOT/nukkit-1.0-20251001.065813-1220.jar
+          wget -O libs/nukkit.jar https://repo.opencollab.dev/maven-snapshots/cn/nukkit/nukkit/1.0-20251001.065813-1220.jar
 
       - name: Build plugin
         run: |
           mkdir -p bin
-          # Listar todos los .java de Main y Listener
+          # Listar todos los .java en Main y Listener
           find src/main/java/org/_2b2tmcpe/CustomDeathMessage -name "*.java" > sources.txt
-          find src/main/java/org/_2b2tmcpe/CustomDeathMessage/Listener -name "*.java" >> sources.txt
           javac -cp "libs/nukkit.jar" -d bin @sources.txt
           cp config.yml bin/
           jar cf CustomDeathMessage.jar -C bin .
