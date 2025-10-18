@@ -20,7 +20,7 @@ jobs:
       - name: Download Nukkit
         run: |
           mkdir -p libs
-          wget -O libs/nukkit.jar https://repo.opencollab.dev/maven-snapshots/cn/nukkit/nukkit/1.0-20251001.065813-1220.jar
+          wget -O libs/nukkit.jar https://repo.opencollab.dev/maven-snapshots/cn/nukkit/nukkit/1.0-SNAPSHOT/nukkit-1.0-20220619.011414-1079.jar
 
       - name: Build plugin
         run: |
