@@ -1,10 +1,8 @@
 name: Build CustomDeathMessage
 
+# Permite ejecutar manualmente desde GitHub
 on:
-  push:
-    branches:
-      - main
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
