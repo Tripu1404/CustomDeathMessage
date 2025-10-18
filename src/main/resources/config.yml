@@ -1,29 +1,54 @@
-# This is the death message configuration of CustomDeathMessage
+# CustomDeathMessage Configuration
 
-# Different word within <> allow the server to show different information
-# <Player> : Name of the victim (It can be a mob, or a player)
-# <Attacker> : Name of the attacker (It can be a mob, or a player)
-# <WeaponName> : When a player is killed by another player using a weapon, you can specify whether to display the weapon name or not.
+# Placeholders:
+# <Player> : Name of the victim (player or mob)
+# <Attacker> : Name of the attacker (player or mob)
+# <WeaponName> : Weapon name if a player killed another player
 
-# ATTENTION:
-# Please do not remove anything before each column, those are names of the death message type
+# === FALL ===
+FALL: <Player> jumped off the roof
+FALL_BY_PLAYER: <Player> was pushed off the roof by <Attacker>
 
-SUFFOCATION: <Player> Suffocated in wall
-FALL: <Player> Jumped off the roof
-FIRE: <Player> burned
+# === FIRE_TICK ===
 FIRE_TICK: <Player> burned
+FIRE_TICK_BY_PLAYER: <Player> burned while fighting <Attacker>
+
+# === FIRE ===
+FIRE: <Player> burned
+
+# === LAVA ===
 LAVA: <Player> swam in lava
+
+# === DROWNING ===
 DROWNING: <Player> drowned
-BLOCK_EXPLOSION: <Player> Blew to pieces
-ENTITY_EXPLOSION: <Player> Blew to pieces by <Attacker>
-LIGHTNING:  <Player> electrocuted
-VOID:    <Player> went over the edge
+
+# === SUFFOCATION ===
+SUFFOCATION: <Player> suffocated in wall
+
+# === VOID ===
+VOID: <Player> went over the edge
+
+# === SUICIDE ===
 SUICIDE: <Player> suicided
-MAGIC: <Player> cursed
+
+# === BLOCK EXPLOSION ===
+BLOCK_EXPLOSION: <Player> blew up
+BLOCK_EXPLOSION_BY_PLAYER: <Player> blew up by <Attacker>
+
+# === ENTITY EXPLOSION ===
+ENTITY_EXPLOSION: <Player> was blown up by <Attacker>
+ENTITY_EXPLOSION_ENDER_CRYSTAL: <Player> was blown up by <Attacker>'s Ender Crystal
+
+# === ENTITY ATTACK ===
 KILL_BY_WEAPON: <Player> got killed by <Attacker> using <WeaponName>
 MOB_ATTACK: <Player> got killed by <Attacker>
+
+# === PROJECTILE ===
 PROJECTILE: <Player> got shot by <Attacker>
 
-# This will be the default death message
-CUSTOM: <Player> died without reason
+# === MAGIC ===
+MAGIC: <Player> died from magic
+MAGIC_BY_ENTITY: <Player> was cursed by <Attacker>
 
+# === DEFAULT ===
+CUSTOM: <Player> died without reason
