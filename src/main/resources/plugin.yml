@@ -1,6 +1,6 @@
 #this plugin is made by maxxie114
 
-name: CustomDeathMessage
+name: CustomDeathMessageV2
 main: org._2b2tmcpe.CustomDeathMessage.Main
 
 version: "3.0.0"
