@@ -1,6 +1,5 @@
 name: Build CustomDeathMessage
 
-# Permite ejecutar manualmente desde GitHub
 on:
   workflow_dispatch:
 
@@ -22,10 +21,14 @@ jobs:
         run: |
           mkdir -p libs
           wget -O libs/nukkit.jar https://repo.opencollab.dev/maven-snapshots/cn/nukkit/nukkit/1.0-SNAPSHOT/nukkit-1.0-20251001.065813-1220.jar
+
       - name: Build plugin
         run: |
           mkdir -p bin
-          javac -cp "libs/nukkit.jar" -d bin src/org/_2b2tmcpe/CustomDeathMessage/*.java src/org/_2b2tmcpe/CustomDeathMessage/Listener/*.java
+          # Listar todos los .java de Main y Listener
+          find src/main/java/org/_2b2tmcpe/CustomDeathMessage -name "*.java" > sources.txt
+          find src/main/java/org/_2b2tmcpe/CustomDeathMessage/Listener -name "*.java" >> sources.txt
+          javac -cp "libs/nukkit.jar" -d bin @sources.txt
           cp config.yml bin/
           jar cf CustomDeathMessage.jar -C bin .
 
