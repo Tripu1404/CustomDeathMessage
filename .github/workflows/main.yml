@@ -1,0 +1,38 @@
+name: Build CustomDeathMessage
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Download Nukkit
+        run: |
+          mkdir -p libs
+          wget -O libs/nukkit.jar https://repo.opencollab.dev/maven-snapshots/cn/nukkit/nukkit/1.0-SNAPSHOT/nukkit-1.0-20251001.065813-1220.jar
+      - name: Build plugin
+        run: |
+          mkdir -p bin
+          javac -cp "libs/nukkit.jar" -d bin src/org/_2b2tmcpe/CustomDeathMessage/*.java src/org/_2b2tmcpe/CustomDeathMessage/Listener/*.java
+          cp config.yml bin/  # Copiar config al bin
+          jar cf CustomDeathMessage.jar -C bin .
+
+      - name: Upload compiled JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: CustomDeathMessage-JAR
+          path: CustomDeathMessage.jar
