@@ -1,22 +1,25 @@
 package org._2b2tmcpe.CustomDeathMessage.Listener;
 
 import org._2b2tmcpe.CustomDeathMessage.Main;
-
 import cn.nukkit.Player;
 import cn.nukkit.entity.Entity;
+import cn.nukkit.entity.item.EntityEndCrystal;
 import cn.nukkit.event.EventHandler;
 import cn.nukkit.event.Listener;
 import cn.nukkit.event.entity.EntityDamageByEntityEvent;
 import cn.nukkit.event.entity.EntityDamageEvent;
-import cn.nukkit.event.entity.EntityDamageEvent.DamageCause;
 import cn.nukkit.event.player.PlayerDeathEvent;
 import cn.nukkit.utils.Config;
 import cn.nukkit.utils.TextFormat;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class PlayerDeathListener implements Listener {
 
-    private Main plugin;
-    private Config conf;
+    private final Main plugin;
+    private final Config conf;
+    private final Map<String, Entity> lastDamager = new HashMap<>();
 
     public PlayerDeathListener(Main plugin) {
         this.plugin = plugin;
@@ -24,89 +27,95 @@ public class PlayerDeathListener implements Listener {
     }
 
     @EventHandler
+    public void onDamage(EntityDamageEvent event) {
+        if (event instanceof EntityDamageByEntityEvent) {
+            Entity victim = event.getEntity();
+            Entity damager = ((EntityDamageByEntityEvent) event).getDamager();
+            if (victim instanceof Player) {
+                lastDamager.put(victim.getName(), damager);
+            }
+        }
+    }
+
+    @EventHandler
     public void onDeath(PlayerDeathEvent event) {
-        String message = "";
         Player player = event.getEntity();
+        EntityDamageEvent lastCause = player.getLastDamageCause();
         String playerName = player.getName();
+        String message = conf.getString("CUSTOM");
 
-        EntityDamageEvent ev = player.getLastDamageCause();
-        DamageCause cause = ev.getCause();
+        Entity damager = lastDamager.get(playerName);
+        String attackerName = (damager != null) ? damager.getName() : null;
 
-        plugin.getLogger().debug("Death cause: " + cause.name());
+        if (lastCause == null) {
+            event.setDeathMessage(TextFormat.RED + convert(message, playerName));
+            return;
+        }
 
-        if (ev instanceof EntityDamageByEntityEvent) {
-            Entity damager = ((EntityDamageByEntityEvent) ev).getDamager();
+        EntityDamageEvent.DamageCause cause = lastCause.getCause();
 
-            // Auto-muerte por ataque propio
-            if (damager.equals(player)) {
-                message = this.convertConfigTags(conf.getString("SUICIDE"), playerName);
-            }
-            // Ataque por jugador con arma
-            else if (damager instanceof Player && cause != DamageCause.PROJECTILE) {
-                String weaponName = ((Player) damager).getInventory().getItemInHand().getName();
-                message = this.convertConfigTags(conf.getString("KILL_BY_WEAPON"), playerName, damager.getName(), weaponName);
-            }
-            // Ataque por entidad (mob)
-            else if (cause == DamageCause.ENTITY_ATTACK && !(damager instanceof Player)) {
-                message = this.convertConfigTags(conf.getString("MOB_ATTACK"), playerName, damager.getName());
-            }
-            // Proyectiles (cualquier tipo de Entity)
-            else if (cause == DamageCause.PROJECTILE) {
-                message = this.convertConfigTags(conf.getString("PROJECTILE"), playerName, damager.getName());
-            }
-            // Explosión de bloque o Ender Crystal
-            else if (cause == DamageCause.ENTITY_EXPLOSION) {
-                String template = conf.getString("ENTITY_EXPLOSION");
-                if (damager.getName().equalsIgnoreCase("EnderCrystal")) {
-                    template = conf.getString("ENDER_CRYSTAL");
+        switch (cause) {
+            case FALL:
+                if (attackerName != null && damager instanceof Player && damager != player) {
+                    message = conf.getString("FALL_BY_PLAYER");
+                    message = convert(message, playerName, attackerName);
+                } else {
+                    message = conf.getString("FALL");
+                    message = convert(message, playerName);
                 }
-                message = this.convertConfigTags(template, playerName, damager.getName());
-            }
-            // Lightning
-            else if (cause == DamageCause.LIGHTNING) {
-                message = this.convertConfigTags(conf.getString("LIGHTNING"), playerName, damager.getName());
-            }
-        } else {
-            // Otros tipos de muerte
-            message = getDeathMessage(cause, playerName);
+                break;
+
+            case FIRE:
+            case FIRE_TICK:
+            case LAVA:
+                if (attackerName != null && damager instanceof Player && damager != player) {
+                    message = conf.getString("FIRE_TICK_BY_PLAYER");
+                    message = convert(message, playerName, attackerName);
+                } else {
+                    message = conf.getString(cause.name());
+                    message = convert(message, playerName);
+                }
+                break;
+
+            case BLOCK_EXPLOSION:
+            case ENTITY_EXPLOSION:
+                if (damager instanceof EntityEndCrystal && attackerName != null) {
+                    message = conf.getString("ENDER_CRYSTAL");
+                    message = convert(message, playerName, attackerName);
+                } else if (attackerName != null) {
+                    message = conf.getString("BLOCK_EXPLOSION_BY_PLAYER");
+                    message = convert(message, playerName, attackerName);
+                } else {
+                    message = conf.getString("BLOCK_EXPLOSION");
+                    message = convert(message, playerName);
+                }
+                break;
+
+            case MAGIC:
+                if (attackerName != null) {
+                    message = conf.getString("MAGIC_BY_ENTITY");
+                    message = convert(message, playerName, attackerName);
+                } else {
+                    message = conf.getString("MAGIC");
+                    message = convert(message, playerName);
+                }
+                break;
+
+            default:
+                message = conf.getString("CUSTOM");
+                message = convert(message, playerName);
+                break;
         }
 
         event.setDeathMessage(TextFormat.RED + message);
+        lastDamager.remove(playerName);
     }
 
-    public String getDeathMessage(DamageCause cause, String playerName) {
-        String msg;
-        switch (cause) {
-            case SUFFOCATION: msg = conf.getString("SUFFOCATION"); break;
-            case FALL: msg = conf.getString("FALL"); break;
-            case FIRE: msg = conf.getString("FIRE"); break;
-            case FIRE_TICK: msg = conf.getString("FIRE_TICK"); break;
-            case LAVA: msg = conf.getString("LAVA"); break;
-            case DROWNING: msg = conf.getString("DROWNING"); break;
-            case BLOCK_EXPLOSION: msg = conf.getString("BLOCK_EXPLOSION"); break;
-            case VOID: msg = conf.getString("VOID"); break;
-            case SUICIDE: msg = conf.getString("SUICIDE"); break;
-            case MAGIC: msg = conf.getString("MAGIC"); break;
-            default: msg = conf.getString("CUSTOM"); break;
-        }
-        return convertConfigTags(msg, playerName);
+    private String convert(String msg, String player) {
+        return msg.replace("<Player>", player);
     }
 
-    // Sobrecargas para reemplazar tags
-    public String convertConfigTags(String msg, String playerName) {
-        return msg.replace("<Player>", playerName);
-    }
-
-    public String convertConfigTags(String msg, String playerName, String attackerName) {
-        msg = msg.replace("<Player>", playerName);
-        msg = msg.replace("<Attacker>", attackerName);
-        return msg;
-    }
-
-    public String convertConfigTags(String msg, String playerName, String attackerName, String weaponName) {
-        msg = msg.replace("<Player>", playerName);
-        msg = msg.replace("<Attacker>", attackerName);
-        msg = msg.replace("<WeaponName>", weaponName);
-        return msg;
+    private String convert(String msg, String player, String attacker) {
+        return msg.replace("<Player>", player).replace("<Attacker>", attacker);
     }
 }
