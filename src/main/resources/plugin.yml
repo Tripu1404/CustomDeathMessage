@@ -1,8 +1,8 @@
-#this plugin is made by maxxie114
+# Custom Death Message by MaxXie114
 
-name: CustomDeathMessageV2
+name: CustomDeathMessage
 main: org._2b2tmcpe.CustomDeathMessage.Main
-
 version: "3.0.0"
-api: ["1.0.7"]
-author: maxxie114
+api: ["1.0.0"]
+author: MaxXie114
+description: Adds configurable custom death messages for players.
