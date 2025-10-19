@@ -1,7 +1,7 @@
 name: Build CustomDeathMessage
 
 on:
-  workflow_dispatch:  # Manual trigger
+  workflow_dispatch:  # Solo se ejecuta manualmente desde "Run workflow"
 
 jobs:
   build:
@@ -21,16 +21,21 @@ jobs:
         run: |
           mkdir -p libs
           wget -O libs/nukkit.jar https://repo.opencollab.dev/maven-snapshots/cn/nukkit/nukkit/1.0-SNAPSHOT/nukkit-1.0-20220619.011414-1079.jar
-      - name: Build plugin
+      - name: Compilar plugin
         run: |
           mkdir -p bin
+          # Buscar todos los .java
           find src/main/java/org/_2b2tmcpe/CustomDeathMessage -name "*.java" > sources.txt
           find src/main/java/org/_2b2tmcpe/CustomDeathMessage/Listener -name "*.java" >> sources.txt
+          # Compilar
           javac -cp "libs/nukkit.jar" -d bin @sources.txt
+          # Copiar recursos
           cp src/main/resources/config.yml bin/
+          cp src/main/resources/plugin.yml bin/
+          # Empaquetar jar
           jar cf CustomDeathMessage.jar -C bin .
 
-      - name: Upload compiled JAR
+      - name: Subir JAR compilado
         uses: actions/upload-artifact@v4
         with:
           name: CustomDeathMessage-JAR
